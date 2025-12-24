@@ -7,7 +7,8 @@ import FormatBold from '@mui/icons-material/FormatBold'
 import Fullscreen from '@mui/icons-material/Fullscreen'
 import FullscreenExit from '@mui/icons-material/FullscreenExit'
 import RestartAlt from '@mui/icons-material/RestartAlt'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import type { UIEvent } from 'react'
 import { cantos, type Canto } from './data/cantos'
 
 const MIN_FONT_SIZE = 16
@@ -721,6 +722,7 @@ const LecturaCanto = ({
   const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive())
   const [showControls, setShowControls] = useState(true)
   const lastScrollTop = useRef(0)
+  const scrollAreaRef = useRef<HTMLDivElement | null>(null)
   const fontWeight = isBold ? 700 : 400
   const isCompactControls = useMediaQuery('(max-width: 900px)')
   const isLandscape = useMediaQuery('(orientation: landscape)')
@@ -771,6 +773,45 @@ const LecturaCanto = ({
     lastScrollTop.current = 0
   }, [canto.slug])
 
+  const handleScrollValue = useCallback((rawValue: number) => {
+    const threshold = 2
+    const current = Math.max(0, rawValue)
+    const previous = lastScrollTop.current
+    const delta = current - previous
+    if (Math.abs(delta) < threshold) {
+      return
+    }
+    if (delta > 0) {
+      setShowControls(true)
+    } else {
+      setShowControls(false)
+    }
+    lastScrollTop.current = current
+  }, [])
+
+  const handleScrollEvent = useCallback(
+    (event: UIEvent<HTMLDivElement>) => {
+      handleScrollValue(event.currentTarget.scrollTop)
+    },
+    [handleScrollValue]
+  )
+
+  useEffect(() => {
+    const handleWindowScroll = () => {
+      const value =
+        window.scrollY ||
+        document.documentElement.scrollTop ||
+        document.body.scrollTop ||
+        0
+      handleScrollValue(value)
+    }
+
+    window.addEventListener('scroll', handleWindowScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', handleWindowScroll)
+    }
+  }, [handleScrollValue])
+
   const resolvedFontSize = fontSize ?? baseFontSize
   const canDecrease = resolvedFontSize > MIN_FONT_SIZE
   const isDefaultSize = fontSize === null
@@ -819,10 +860,15 @@ const LecturaCanto = ({
     <Box
       sx={{
         minHeight: '100vh',
+        height: '100vh',
+        '@supports (height: 100dvh)': {
+          height: '100dvh',
+        },
         width: '100vw',
         backgroundColor: 'background.default',
         display: 'flex',
         flexDirection: 'column',
+        overflow: 'hidden',
       }}
     >
       <Box
@@ -840,7 +886,7 @@ const LecturaCanto = ({
         <Stack spacing={{ xs: 0.6, sm: 1, md: 1.25 }} alignItems="stretch">
           <Box
             sx={{
-              maxHeight: showControls ? 160 : 0,
+              maxHeight: showControls ? { xs: 110, sm: 130, md: 160 } : 0,
               opacity: showControls ? 1 : 0,
               transform: showControls ? 'translateY(0)' : 'translateY(-8px)',
               transition: 'max-height 0.25s ease, opacity 0.2s ease, transform 0.2s ease',
@@ -962,21 +1008,15 @@ const LecturaCanto = ({
       </Box>
 
       <Box
+        ref={scrollAreaRef}
+        onScroll={handleScrollEvent}
         sx={{
           flex: 1,
+          minHeight: 0,
           overflowY: 'auto',
+          WebkitOverflowScrolling: 'touch',
           px: 0,
           py: { xs: 3, md: 4 },
-        }}
-        onScroll={(event) => {
-          const current = event.currentTarget.scrollTop
-          const previous = lastScrollTop.current
-          if (current > previous + 6) {
-            setShowControls(true)
-          } else if (current < previous - 6) {
-            setShowControls(false)
-          }
-          lastScrollTop.current = current
         }}
       >
         <Box ref={containerRef} sx={{ width: '100%' }}>

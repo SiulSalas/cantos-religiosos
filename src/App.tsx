@@ -15,6 +15,8 @@ const MIN_FONT_SIZE = 16
 const MAX_FONT_SIZE = 220
 const ICON_SIZE = { xs: 24, sm: 30, md: 36, lg: 42 }
 const LETTER_SPACING_EM = 0.03
+const WRAP_LINE_HEIGHT = 1.35
+const LINE_GAP_EM = 0.45
 const INDEX_TITLE_MIN = 28
 const INDEX_TITLE_MAX = 180
 const INDEX_TITLE_LETTER_SPACING_EM = 0.02
@@ -710,8 +712,13 @@ const LecturaCanto = ({
     () =>
       canto.lyrics
         .split(/\n\s*\n+/)
-        .map((verse) => verse.trimEnd())
-        .filter(Boolean),
+        .map((verse) =>
+          verse
+            .split('\n')
+            .map((line) => line.trimEnd())
+            .filter((line) => line.trim().length > 0)
+        )
+        .filter((lines) => lines.length > 0),
     [canto.lyrics]
   )
   const longestLine = useMemo(() => findLongestLine(lines), [lines])
@@ -1024,25 +1031,30 @@ const LecturaCanto = ({
             spacing={6}
             divider={<Divider flexItem sx={{ borderColor: '#ffffff', my: 3 }} />}
           >
-            {verses.map((verse, index) => (
-              <Typography
-                key={`${canto.slug}-verso-${index}`}
-                component="pre"
-                sx={{
-                  m: 0,
-                  whiteSpace: 'pre-wrap',
-                  textAlign: 'center',
-                  fontSize: `${resolvedFontSize}px`,
-                  lineHeight: 1.75,
-                  letterSpacing: `${LETTER_SPACING_EM}em`,
-                  wordBreak: 'normal',
-                  overflowWrap: 'break-word',
-                  fontWeight,
-                  fontFamily: FONT_FAMILY,
-                }}
-              >
-                {verse}
-              </Typography>
+            {verses.map((verseLines, index) => (
+              <Box key={`${canto.slug}-verso-${index}`} sx={{ textAlign: 'center' }}>
+                {verseLines.map((line, lineIndex) => (
+                  <Typography
+                    key={`${canto.slug}-verso-${index}-linea-${lineIndex}`}
+                    component="div"
+                    sx={{
+                      m: 0,
+                      mt: lineIndex === 0 ? 0 : `${LINE_GAP_EM}em`,
+                      whiteSpace: 'pre-wrap',
+                      textAlign: 'center',
+                      fontSize: `${resolvedFontSize}px`,
+                      lineHeight: WRAP_LINE_HEIGHT,
+                      letterSpacing: `${LETTER_SPACING_EM}em`,
+                      wordBreak: 'normal',
+                      overflowWrap: 'break-word',
+                      fontWeight,
+                      fontFamily: FONT_FAMILY,
+                    }}
+                  >
+                    {line}
+                  </Typography>
+                ))}
+              </Box>
             ))}
           </Stack>
           {canto.tags.length > 0 && (

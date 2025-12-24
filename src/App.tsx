@@ -11,7 +11,7 @@ import { cantos, type Canto } from './data/cantos'
 
 const MIN_FONT_SIZE = 16
 const MAX_FONT_SIZE = 220
-const ICON_SIZE = 48
+const ICON_SIZE = { xs: 28, sm: 36, md: 44, lg: 52 }
 const LETTER_SPACING_EM = 0.03
 const INDEX_TITLE_MIN = 28
 const INDEX_TITLE_MAX = 180
@@ -27,10 +27,16 @@ const CONTROL_BUTTON_SX = {
   fontWeight: 600,
   display: 'flex',
   flexDirection: 'column',
-  gap: 0.5,
+  gap: { xs: 0.25, sm: 0.4, md: 0.5 },
   textTransform: 'none',
-  fontSize: '1.15rem',
-  lineHeight: 1.2,
+  fontSize: { xs: '0.65rem', sm: '0.85rem', md: '1rem', lg: '1.1rem' },
+  lineHeight: 1.05,
+  px: { xs: 1, sm: 1.25, md: 1.5 },
+  py: { xs: 0.6, sm: 0.85, md: 1 },
+  minWidth: { xs: 86, sm: 110, md: 130 },
+  '& span': {
+    whiteSpace: 'nowrap',
+  },
 }
 
 type Route =
@@ -792,14 +798,14 @@ const LecturaCanto = ({
           position: 'sticky',
           top: 0,
           zIndex: 2,
-          px: { xs: 1, sm: 2, md: 3 },
-          py: 2,
+          px: { xs: 0.5, sm: 1, md: 2 },
+          py: { xs: 0.5, sm: 1, md: 1.5 },
           borderBottom: '1px solid',
           borderColor: 'divider',
           backgroundColor: 'background.default',
         }}
       >
-        <Stack spacing={2} alignItems="stretch">
+        <Stack spacing={{ xs: 1, sm: 1.5, md: 2 }} alignItems="stretch">
           <Box
             sx={{
               display: 'flex',
@@ -823,7 +829,18 @@ const LecturaCanto = ({
               <ArrowBack sx={{ fontSize: ICON_SIZE }} />
               <span>Volver a la lista</span>
             </Button>
-            <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
+            <Stack
+              direction="row"
+              useFlexGap
+              sx={{
+                gap: { xs: 0.75, sm: 1 },
+                flexWrap: { xs: 'nowrap', md: 'wrap' },
+                overflowX: { xs: 'auto', md: 'visible' },
+                alignItems: 'center',
+                maxWidth: '100%',
+                pb: { xs: 0.5, md: 0 },
+              }}
+            >
               <Button
                 variant="outlined"
                 onClick={handleDecrease}
@@ -903,7 +920,14 @@ const LecturaCanto = ({
             </Stack>
           </Box>
           <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700 }}>
+            <Typography
+              variant="h4"
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: '1.3rem', sm: '1.75rem', md: '2.1rem' },
+                lineHeight: 1.2,
+              }}
+            >
               {canto.title}
             </Typography>
           </Box>

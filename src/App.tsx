@@ -782,9 +782,9 @@ const LecturaCanto = ({
       return
     }
     if (delta > 0) {
-      setShowControls(true)
-    } else {
       setShowControls(false)
+    } else {
+      setShowControls(true)
     }
     lastScrollTop.current = current
   }, [])

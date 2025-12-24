@@ -1,4 +1,5 @@
 import { Box, Button, Chip, Container, Divider, Paper, Stack, Typography } from '@mui/material'
+import useMediaQuery from '@mui/material/useMediaQuery'
 import ArrowBack from '@mui/icons-material/ArrowBack'
 import Add from '@mui/icons-material/Add'
 import Remove from '@mui/icons-material/Remove'
@@ -11,7 +12,7 @@ import { cantos, type Canto } from './data/cantos'
 
 const MIN_FONT_SIZE = 16
 const MAX_FONT_SIZE = 220
-const ICON_SIZE = { xs: 28, sm: 36, md: 44, lg: 52 }
+const ICON_SIZE = { xs: 24, sm: 30, md: 36, lg: 42 }
 const LETTER_SPACING_EM = 0.03
 const INDEX_TITLE_MIN = 28
 const INDEX_TITLE_MAX = 180
@@ -27,15 +28,18 @@ const CONTROL_BUTTON_SX = {
   fontWeight: 600,
   display: 'flex',
   flexDirection: 'column',
-  gap: { xs: 0.25, sm: 0.4, md: 0.5 },
+  gap: { xs: 0.2, sm: 0.35, md: 0.5 },
   textTransform: 'none',
-  fontSize: { xs: '0.65rem', sm: '0.85rem', md: '1rem', lg: '1.1rem' },
+  fontSize: { xs: '0.6rem', sm: '0.8rem', md: '0.95rem', lg: '1.05rem' },
   lineHeight: 1.05,
-  px: { xs: 1, sm: 1.25, md: 1.5 },
-  py: { xs: 0.6, sm: 0.85, md: 1 },
-  minWidth: { xs: 86, sm: 110, md: 130 },
+  px: { xs: 0.75, sm: 1, md: 1.25 },
+  py: { xs: 0.45, sm: 0.65, md: 0.85 },
+  minWidth: { xs: 64, sm: 90, md: 110 },
+  flex: '0 1 auto',
   '& span': {
     whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
   },
 }
 
@@ -715,7 +719,12 @@ const LecturaCanto = ({
   const [baseFontSize, setBaseFontSize] = useState(MIN_FONT_SIZE)
   const [isBold, setIsBold] = useState(loadPreferredBold)
   const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive())
+  const [showControls, setShowControls] = useState(true)
+  const lastScrollTop = useRef(0)
   const fontWeight = isBold ? 700 : 400
+  const isCompactControls = useMediaQuery('(max-width: 900px)')
+  const isLandscape = useMediaQuery('(orientation: landscape)')
+  const useCompactLabels = isCompactControls || isLandscape
 
   useEffect(() => {
     const element = containerRef.current
@@ -757,6 +766,11 @@ const LecturaCanto = ({
     }
   }, [])
 
+  useEffect(() => {
+    setShowControls(true)
+    lastScrollTop.current = 0
+  }, [canto.slug])
+
   const resolvedFontSize = fontSize ?? baseFontSize
   const canDecrease = resolvedFontSize > MIN_FONT_SIZE
   const isDefaultSize = fontSize === null
@@ -774,6 +788,24 @@ const LecturaCanto = ({
       return Math.max(MIN_FONT_SIZE, base - 2)
     })
   }
+
+  const controlLabels = useMemo(
+    () => ({
+      back: useCompactLabels ? 'Volver' : 'Volver a la lista',
+      decrease: useCompactLabels ? 'Menos' : 'Reducir letra',
+      reset: useCompactLabels ? 'Restab.' : 'Restablecer letra',
+      increase: useCompactLabels ? 'Mas' : 'Aumentar letra',
+      bold: 'Negritas',
+      fullscreen: useCompactLabels
+        ? isFullscreen
+          ? 'Salir'
+          : 'Pantalla'
+        : isFullscreen
+          ? 'Salir de pantalla completa'
+          : 'Pantalla completa',
+    }),
+    [isFullscreen, useCompactLabels]
+  )
 
   useEffect(() => {
     savePreferredFontSize(fontSize)
@@ -799,52 +831,36 @@ const LecturaCanto = ({
           top: 0,
           zIndex: 2,
           px: { xs: 0.5, sm: 1, md: 2 },
-          py: { xs: 0.5, sm: 1, md: 1.5 },
+          py: { xs: 0.4, sm: 0.8, md: 1.2 },
           borderBottom: '1px solid',
           borderColor: 'divider',
           backgroundColor: 'background.default',
         }}
       >
-        <Stack spacing={{ xs: 1, sm: 1.5, md: 2 }} alignItems="stretch">
+        <Stack spacing={{ xs: 0.6, sm: 1, md: 1.25 }} alignItems="stretch">
           <Box
             sx={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: 2,
-              alignItems: 'center',
-              justifyContent: 'space-between',
+              maxHeight: showControls ? 160 : 0,
+              opacity: showControls ? 1 : 0,
+              transform: showControls ? 'translateY(0)' : 'translateY(-8px)',
+              transition: 'max-height 0.25s ease, opacity 0.2s ease, transform 0.2s ease',
+              overflow: 'hidden',
+              pointerEvents: showControls ? 'auto' : 'none',
             }}
           >
-            <Button
-              variant="outlined"
-              onClick={onBack}
-              sx={{
-                ...CONTROL_BUTTON_SX,
-                '&.Mui-disabled': {
-                  color: '#6b6b6b',
-                  borderColor: '#333333',
-                },
-              }}
-            >
-              <ArrowBack sx={{ fontSize: ICON_SIZE }} />
-              <span>Volver a la lista</span>
-            </Button>
             <Stack
               direction="row"
               useFlexGap
               sx={{
-                gap: { xs: 0.75, sm: 1 },
-                flexWrap: { xs: 'nowrap', md: 'wrap' },
-                overflowX: { xs: 'auto', md: 'visible' },
+                gap: { xs: 0.5, sm: 0.75 },
+                flexWrap: 'nowrap',
                 alignItems: 'center',
-                maxWidth: '100%',
-                pb: { xs: 0.5, md: 0 },
+                justifyContent: 'space-between',
               }}
             >
               <Button
                 variant="outlined"
-                onClick={handleDecrease}
-                disabled={!canDecrease}
+                onClick={onBack}
                 sx={{
                   ...CONTROL_BUTTON_SX,
                   '&.Mui-disabled': {
@@ -853,70 +869,81 @@ const LecturaCanto = ({
                   },
                 }}
               >
-                <Remove sx={{ fontSize: ICON_SIZE }} />
-                <span>Reducir letra</span>
+                <ArrowBack sx={{ fontSize: ICON_SIZE }} />
+                <span>{controlLabels.back}</span>
               </Button>
-              <Button
-                variant="outlined"
-                onClick={() => setFontSize(null)}
-                disabled={isDefaultSize}
-                sx={{
-                  ...CONTROL_BUTTON_SX,
-                  '&.Mui-disabled': {
-                    color: '#6b6b6b',
-                    borderColor: '#333333',
-                  },
-                }}
-              >
-                <RestartAlt sx={{ fontSize: ICON_SIZE }} />
-                <span>Restablecer letra</span>
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={handleIncrease}
-                sx={CONTROL_BUTTON_SX}
-              >
-                <Add sx={{ fontSize: ICON_SIZE }} />
-                <span>Aumentar letra</span>
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => setIsBold((prev) => !prev)}
-                aria-pressed={isBold}
-                sx={{
-                  ...CONTROL_BUTTON_SX,
-                  borderColor: isBold ? '#ffffff' : '#6b6b6b',
-                  backgroundColor: isBold ? '#1a1a1a' : 'transparent',
-                }}
-              >
-                <FormatBold sx={{ fontSize: ICON_SIZE }} />
-                <span>Negritas</span>
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  if (isFullscreen) {
-                    void exitFullscreen()
-                  } else {
-                    void requestFullscreen()
-                  }
-                }}
-                aria-pressed={isFullscreen}
-                sx={{
-                  ...CONTROL_BUTTON_SX,
-                  borderColor: isFullscreen ? '#ffffff' : '#6b6b6b',
-                  backgroundColor: isFullscreen ? '#1a1a1a' : 'transparent',
-                }}
-              >
-                {isFullscreen ? (
-                  <FullscreenExit sx={{ fontSize: ICON_SIZE }} />
-                ) : (
-                  <Fullscreen sx={{ fontSize: ICON_SIZE }} />
-                )}
-                <span>
-                  {isFullscreen ? 'Salir de pantalla completa' : 'Pantalla completa'}
-                </span>
-              </Button>
+              <Stack direction="row" useFlexGap sx={{ gap: { xs: 0.5, sm: 0.75 } }}>
+                <Button
+                  variant="outlined"
+                  onClick={handleDecrease}
+                  disabled={!canDecrease}
+                  sx={{
+                    ...CONTROL_BUTTON_SX,
+                    '&.Mui-disabled': {
+                      color: '#6b6b6b',
+                      borderColor: '#333333',
+                    },
+                  }}
+                >
+                  <Remove sx={{ fontSize: ICON_SIZE }} />
+                  <span>{controlLabels.decrease}</span>
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setFontSize(null)}
+                  disabled={isDefaultSize}
+                  sx={{
+                    ...CONTROL_BUTTON_SX,
+                    '&.Mui-disabled': {
+                      color: '#6b6b6b',
+                      borderColor: '#333333',
+                    },
+                  }}
+                >
+                  <RestartAlt sx={{ fontSize: ICON_SIZE }} />
+                  <span>{controlLabels.reset}</span>
+                </Button>
+                <Button variant="outlined" onClick={handleIncrease} sx={CONTROL_BUTTON_SX}>
+                  <Add sx={{ fontSize: ICON_SIZE }} />
+                  <span>{controlLabels.increase}</span>
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => setIsBold((prev) => !prev)}
+                  aria-pressed={isBold}
+                  sx={{
+                    ...CONTROL_BUTTON_SX,
+                    borderColor: isBold ? '#ffffff' : '#6b6b6b',
+                    backgroundColor: isBold ? '#1a1a1a' : 'transparent',
+                  }}
+                >
+                  <FormatBold sx={{ fontSize: ICON_SIZE }} />
+                  <span>{controlLabels.bold}</span>
+                </Button>
+                <Button
+                  variant="outlined"
+                  onClick={() => {
+                    if (isFullscreen) {
+                      void exitFullscreen()
+                    } else {
+                      void requestFullscreen()
+                    }
+                  }}
+                  aria-pressed={isFullscreen}
+                  sx={{
+                    ...CONTROL_BUTTON_SX,
+                    borderColor: isFullscreen ? '#ffffff' : '#6b6b6b',
+                    backgroundColor: isFullscreen ? '#1a1a1a' : 'transparent',
+                  }}
+                >
+                  {isFullscreen ? (
+                    <FullscreenExit sx={{ fontSize: ICON_SIZE }} />
+                  ) : (
+                    <Fullscreen sx={{ fontSize: ICON_SIZE }} />
+                  )}
+                  <span>{controlLabels.fullscreen}</span>
+                </Button>
+              </Stack>
             </Stack>
           </Box>
           <Box>
@@ -924,7 +951,7 @@ const LecturaCanto = ({
               variant="h4"
               sx={{
                 fontWeight: 700,
-                fontSize: { xs: '1.3rem', sm: '1.75rem', md: '2.1rem' },
+                fontSize: { xs: '1.2rem', sm: '1.6rem', md: '2rem' },
                 lineHeight: 1.2,
               }}
             >
@@ -940,6 +967,16 @@ const LecturaCanto = ({
           overflowY: 'auto',
           px: 0,
           py: { xs: 3, md: 4 },
+        }}
+        onScroll={(event) => {
+          const current = event.currentTarget.scrollTop
+          const previous = lastScrollTop.current
+          if (current > previous + 6) {
+            setShowControls(true)
+          } else if (current < previous - 6) {
+            setShowControls(false)
+          }
+          lastScrollTop.current = current
         }}
       >
         <Box ref={containerRef} sx={{ width: '100%' }}>

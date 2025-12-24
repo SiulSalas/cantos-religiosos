@@ -31,7 +31,7 @@ jobs:
       - name: Build
         run: npm run build
         env:
-          BASE_PATH: /cantos-catolicos/
+          BASE_PATH: /cantos-religiosos/
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

@@ -6,18 +6,50 @@ import { ThemeProvider, createTheme } from '@mui/material/styles'
 
 import App from './App'
 
-import '@fontsource/roboto/300.css'
-import '@fontsource/roboto/400.css'
-import '@fontsource/roboto/500.css'
-import '@fontsource/roboto/700.css'
-
 const theme = createTheme({
   palette: {
-    mode: 'light',
-    primary: { main: '#1976d2' },
+    mode: 'dark',
+    primary: { main: '#ffffff' },
+    background: {
+      default: '#000000',
+      paper: '#000000',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#bdbdbd',
+    },
+    divider: '#3a3a3a',
   },
   typography: {
-    fontFamily: 'Roboto, system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+    fontFamily:
+      '"Atkinson Hyperlegible Next", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif',
+    fontSize: 18,
+  },
+  components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: '#000000',
+          color: '#ffffff',
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          fontSize: '1rem',
+          padding: '10px 16px',
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          fontSize: '0.95rem',
+          height: 32,
+        },
+      },
+    },
   },
 })
 
